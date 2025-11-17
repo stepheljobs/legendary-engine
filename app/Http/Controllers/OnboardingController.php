@@ -79,6 +79,13 @@ class OnboardingController extends Controller
 
         // Run this in the tenant context
         $tenant->run(function () use ($user) {
+            // Run tenant migrations first
+            \Artisan::call('migrate', [
+                '--force' => true,
+                '--path' => 'database/migrations/tenant',
+                '--realpath' => true,
+            ]);
+
             // Seed roles and permissions
             \Artisan::call('db:seed', [
                 '--class' => 'Database\\Seeders\\RolePermissionSeeder',
