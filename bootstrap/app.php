@@ -11,7 +11,12 @@ return Application::configure(basePath: dirname(__DIR__))
         health: '/up',
     )
     ->withMiddleware(function (Middleware $middleware): void {
-        //
+        // Register permission and role middleware aliases
+        $middleware->alias([
+            'permission' => \App\Http\Middleware\CheckPermission::class,
+            'role' => \App\Http\Middleware\CheckRole::class,
+            'team.member' => \App\Http\Middleware\EnsureIsTeamMember::class,
+        ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {
         //

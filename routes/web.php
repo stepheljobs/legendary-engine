@@ -47,6 +47,12 @@ Route::middleware('auth')->prefix('onboard')->name('onboarding.')->group(functio
     Route::get('/check-subdomain', [OnboardingController::class, 'checkSubdomain'])->name('check-subdomain');
 });
 
+// Invitation routes (public access for invitation acceptance)
+Route::prefix('invitations')->name('invitations.')->group(function () {
+    Route::get('/{token}', [\App\Http\Controllers\InvitationController::class, 'show'])->name('show');
+    Route::post('/{token}/accept', [\App\Http\Controllers\InvitationController::class, 'accept'])->middleware('auth')->name('accept');
+});
+
 // API routes for tenant management
 Route::prefix('api/tenants')->name('api.tenants.')->group(function () {
     Route::get('/', [\App\Http\Controllers\Api\TenantController::class, 'index'])->name('index');
