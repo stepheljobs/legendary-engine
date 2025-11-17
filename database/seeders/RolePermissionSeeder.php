@@ -121,6 +121,8 @@ class RolePermissionSeeder extends Seeder
             }
         }
 
-        $this->command->info('Roles and permissions seeded successfully!');
+        if ($this->command) {
+            $this->command->info('Roles and permissions seeded successfully!');
+        }
     }
 }

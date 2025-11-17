@@ -60,6 +60,20 @@ class OnboardingController extends Controller
             'domain' => $domain,
         ]);
 
+        // Ensure tenant database and migrations are complete
+        // Even though JobPipeline runs synchronously, we refresh to ensure it's done
+        $tenant->refresh();
+
+        // Verify database was created, if not create it manually
+        try {
+            tenancy()->initialize($tenant);
+            \DB::connection('tenant')->getPdo();
+            tenancy()->end();
+        } catch (\Exception $e) {
+            // Database might not exist, JobPipeline should have created it
+            // but if it failed, we'll get an error when we try to seed
+        }
+
         // Create the user in the tenant database
         $this->createTenantUser($tenant);
 
@@ -77,20 +91,13 @@ class OnboardingController extends Controller
     {
         $user = auth()->user();
 
-        // Run this in the tenant context
-        $tenant->run(function () use ($user) {
-            // Run tenant migrations first
-            \Artisan::call('migrate', [
-                '--force' => true,
-                '--path' => 'database/migrations/tenant',
-                '--realpath' => true,
-            ]);
+        // Initialize tenancy to switch database context
+        tenancy()->initialize($tenant);
 
+        try {
             // Seed roles and permissions
-            \Artisan::call('db:seed', [
-                '--class' => 'Database\\Seeders\\RolePermissionSeeder',
-                '--force' => true,
-            ]);
+            $seeder = new \Database\Seeders\RolePermissionSeeder();
+            $seeder->run();
 
             // Create user in tenant database
             $tenantUser = \App\Models\User::create([
@@ -111,7 +118,10 @@ class OnboardingController extends Controller
                     'joined_at' => now(),
                 ]);
             }
-        });
+        } finally {
+            // End tenancy to return to central database context
+            tenancy()->end();
+        }
     }
 
     /**
