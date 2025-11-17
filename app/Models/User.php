@@ -51,7 +51,7 @@ class User extends Authenticatable
      */
     public function tenant()
     {
-        return $this->hasOne(\Stancl\Tenancy\Database\Models\Tenant::class, 'user_id');
+        return $this->hasOne(Tenant::class, 'user_id');
     }
 
     /**
