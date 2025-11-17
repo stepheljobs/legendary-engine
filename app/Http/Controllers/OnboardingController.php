@@ -81,7 +81,14 @@ class OnboardingController extends Controller
         // Use tenant->run() to execute code in tenant context
         // This automatically handles tenancy initialization and cleanup
         $tenant->run(function () use ($centralUser) {
-            // Seed roles and permissions (migrations already run by TenancyServiceProvider)
+            // Ensure migrations are run (JobPipeline should have done this, but run again to be safe)
+            \Artisan::call('migrate', [
+                '--database' => 'tenant',
+                '--path' => 'database/migrations/tenant',
+                '--force' => true,
+            ]);
+
+            // Seed roles and permissions
             $seeder = new \Database\Seeders\RolePermissionSeeder();
             $seeder->run();
 
