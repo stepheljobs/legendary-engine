@@ -95,7 +95,7 @@ class OnboardingController extends Controller
         tenancy()->initialize($tenant);
 
         try {
-            // Seed roles and permissions
+            // Seed roles and permissions (tables created by TenancyServiceProvider)
             $seeder = new \Database\Seeders\RolePermissionSeeder();
             $seeder->run();
 

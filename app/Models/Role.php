@@ -12,6 +12,13 @@ class Role extends Model
     use HasFactory;
 
     /**
+     * The connection name for the model.
+     *
+     * @var string
+     */
+    protected $connection = 'tenant';
+
+    /**
      * The attributes that are mass assignable.
      *
      * @var array<int, string>
