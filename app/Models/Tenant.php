@@ -33,4 +33,14 @@ class Tenant extends BaseTenant
             'user_id',
         ];
     }
+
+    /**
+     * Get the domains associated with this tenant.
+     *
+     * @return \Illuminate\Database\Eloquent\Relations\HasMany
+     */
+    public function domains()
+    {
+        return $this->hasMany(\Stancl\Tenancy\Database\Models\Domain::class);
+    }
 }
