@@ -17,19 +17,9 @@ Route::get('/', function () {
     return view('welcome');
 })->name('home');
 
-// Dashboard - redirects to tenant or onboarding
+// Dashboard - show user dashboard
 Route::middleware(['auth', 'verified'])->get('/dashboard', function () {
-    $user = auth()->user();
-
-    // If user has a tenant, redirect to tenant subdomain
-    if ($user->tenant) {
-        $domain = $user->tenant->subdomain . '.' . config('app.domain', 'localhost');
-        $port = request()->getPort() != 80 && request()->getPort() != 443 ? ':' . request()->getPort() : '';
-        return redirect('http://' . $domain . $port);
-    }
-
-    // Otherwise, redirect to onboarding
-    return redirect()->route('onboarding.create');
+    return view('dashboard');
 })->name('dashboard');
 
 // Profile routes
