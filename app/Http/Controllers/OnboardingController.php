@@ -60,21 +60,8 @@ class OnboardingController extends Controller
             'domain' => $domain,
         ]);
 
-        // Ensure tenant database and migrations are complete
-        // Even though JobPipeline runs synchronously, we refresh to ensure it's done
-        $tenant->refresh();
-
-        // Verify database was created, if not create it manually
-        try {
-            tenancy()->initialize($tenant);
-            \DB::connection('tenant')->getPdo();
-            tenancy()->end();
-        } catch (\Exception $e) {
-            // Database might not exist, JobPipeline should have created it
-            // but if it failed, we'll get an error when we try to seed
-        }
-
         // Create the user in the tenant database
+        // The tenant->run() method automatically initializes and ends tenancy
         $this->createTenantUser($tenant);
 
         return redirect()
@@ -89,22 +76,21 @@ class OnboardingController extends Controller
      */
     protected function createTenantUser($tenant)
     {
-        $user = auth()->user();
+        $centralUser = auth()->user();
 
-        // Initialize tenancy to switch database context
-        tenancy()->initialize($tenant);
-
-        try {
-            // Seed roles and permissions (tables created by TenancyServiceProvider)
+        // Use tenant->run() to execute code in tenant context
+        // This automatically handles tenancy initialization and cleanup
+        $tenant->run(function () use ($centralUser) {
+            // Seed roles and permissions (migrations already run by TenancyServiceProvider)
             $seeder = new \Database\Seeders\RolePermissionSeeder();
             $seeder->run();
 
             // Create user in tenant database
             $tenantUser = \App\Models\User::create([
-                'name' => $user->name,
-                'email' => $user->email,
-                'password' => $user->password,
-                'email_verified_at' => $user->email_verified_at,
+                'name' => $centralUser->name,
+                'email' => $centralUser->email,
+                'password' => $centralUser->password,
+                'email_verified_at' => $centralUser->email_verified_at,
             ]);
 
             // Get the owner role
@@ -118,10 +104,7 @@ class OnboardingController extends Controller
                     'joined_at' => now(),
                 ]);
             }
-        } finally {
-            // End tenancy to return to central database context
-            tenancy()->end();
-        }
+        });
     }
 
     /**
