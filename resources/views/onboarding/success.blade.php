@@ -22,10 +22,10 @@
                 </div>
             @endif
 
-            @if(session('subdomain'))
+            @if(session('tenant_url'))
                 <div class="mt-6 p-6 bg-white border border-gray-200 rounded-lg shadow-sm">
                     <p class="text-sm text-gray-600 mb-2">Your company is now accessible at:</p>
-                    <a href="http://{{ session('subdomain') }}.{{ config('app.domain', 'localhost') }}"
+                    <a href="{{ session('tenant_url') }}"
                        class="text-lg font-semibold text-indigo-600 hover:text-indigo-500 break-all">
                         {{ session('subdomain') }}.{{ config('app.domain', 'localhost') }}
                     </a>
@@ -33,8 +33,8 @@
             @endif
 
             <div class="mt-8 space-y-3">
-                @if(session('subdomain'))
-                    <a href="http://{{ session('subdomain') }}.{{ config('app.domain', 'localhost') }}"
+                @if(session('tenant_url'))
+                    <a href="{{ session('tenant_url') }}"
                        class="w-full inline-flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
                         Go to Your Dashboard
                     </a>

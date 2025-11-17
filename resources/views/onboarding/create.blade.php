@@ -10,9 +10,15 @@
                 Create Your Company
             </h2>
             <p class="mt-2 text-center text-sm text-gray-600">
-                Set up your multi-tenant workspace in seconds
+                Welcome, {{ auth()->user()->name }}! Set up your multi-tenant workspace
             </p>
         </div>
+
+        @if ($errors->has('error'))
+            <div class="rounded-md bg-red-50 p-4">
+                <p class="text-sm text-red-800">{{ $errors->first('error') }}</p>
+            </div>
+        @endif
 
         <form class="mt-8 space-y-6" action="{{ route('onboarding.store') }}" method="POST" id="onboardingForm">
             @csrf
@@ -66,58 +72,6 @@
                         Use lowercase letters, numbers, and hyphens only
                     </p>
                 </div>
-
-                <!-- Email -->
-                <div>
-                    <label for="email" class="block text-sm font-medium text-gray-700 mb-1">
-                        Admin Email
-                    </label>
-                    <input
-                        id="email"
-                        name="email"
-                        type="email"
-                        required
-                        value="{{ old('email') }}"
-                        class="appearance-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-md focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 focus:z-10 sm:text-sm @error('email') border-red-500 @enderror"
-                        placeholder="admin@acme.com"
-                    >
-                    @error('email')
-                        <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
-                    @enderror
-                </div>
-
-                <!-- Password -->
-                <div>
-                    <label for="password" class="block text-sm font-medium text-gray-700 mb-1">
-                        Password
-                    </label>
-                    <input
-                        id="password"
-                        name="password"
-                        type="password"
-                        required
-                        class="appearance-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-md focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 focus:z-10 sm:text-sm @error('password') border-red-500 @enderror"
-                        placeholder="••••••••"
-                    >
-                    @error('password')
-                        <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
-                    @enderror
-                </div>
-
-                <!-- Password Confirmation -->
-                <div>
-                    <label for="password_confirmation" class="block text-sm font-medium text-gray-700 mb-1">
-                        Confirm Password
-                    </label>
-                    <input
-                        id="password_confirmation"
-                        name="password_confirmation"
-                        type="password"
-                        required
-                        class="appearance-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-md focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 focus:z-10 sm:text-sm"
-                        placeholder="••••••••"
-                    >
-                </div>
             </div>
 
             <div>
@@ -132,8 +86,8 @@
         </form>
 
         <div class="text-center">
-            <a href="{{ route('home') }}" class="text-sm text-indigo-600 hover:text-indigo-500">
-                Back to home
+            <a href="{{ route('dashboard') }}" class="text-sm text-indigo-600 hover:text-indigo-500">
+                Back to dashboard
             </a>
         </div>
     </div>

@@ -23,6 +23,12 @@ class OnboardingController extends Controller
      */
     public function store(Request $request)
     {
+        // Check if user already has a tenant
+        if (auth()->user()->tenant) {
+            return redirect()->route('onboarding.create')
+                ->withErrors(['error' => 'You already have a company. Each user can only create one company.']);
+        }
+
         $validated = $request->validate([
             'company_name' => ['required', 'string', 'max:255'],
             'subdomain' => [
@@ -30,40 +36,56 @@ class OnboardingController extends Controller
                 'string',
                 'max:63',
                 'regex:/^[a-z0-9][a-z0-9-]*[a-z0-9]$/',
-                Rule::unique('domains', 'domain'),
             ],
-            'email' => ['required', 'email', 'max:255'],
-            'password' => ['required', 'string', 'min:8', 'confirmed'],
         ], [
             'subdomain.regex' => 'The subdomain must start and end with a letter or number, and can only contain lowercase letters, numbers, and hyphens.',
-            'subdomain.unique' => 'This subdomain is already taken.',
         ]);
+
+        // Check subdomain availability
+        $domain = $validated['subdomain'] . '.' . config('app.domain', 'localhost');
+        if (Domain::where('domain', $domain)->exists()) {
+            return back()->withErrors(['subdomain' => 'This subdomain is already taken.'])->withInput();
+        }
 
         // Create the tenant
         $tenant = Tenant::create([
             'id' => Str::uuid()->toString(),
+            'user_id' => auth()->id(),
             'company_name' => $validated['company_name'],
             'subdomain' => $validated['subdomain'],
         ]);
 
         // Create the subdomain
-        $domain = $validated['subdomain'] . '.' . config('app.domain', 'localhost');
         $tenant->domains()->create([
             'domain' => $domain,
         ]);
 
-        // Store user info in tenant data for later registration
-        $tenant->update([
-            'data' => [
-                'email' => $validated['email'],
-                'password' => bcrypt($validated['password']),
-            ]
-        ]);
+        // Create the user in the tenant database
+        $this->createTenantUser($tenant);
 
         return redirect()
             ->route('onboarding.success')
             ->with('success', 'Your company has been created successfully!')
-            ->with('subdomain', $validated['subdomain']);
+            ->with('subdomain', $validated['subdomain'])
+            ->with('tenant_url', 'http://' . $domain . ':8000');
+    }
+
+    /**
+     * Create user in tenant database
+     */
+    protected function createTenantUser($tenant)
+    {
+        $user = auth()->user();
+
+        // Run this in the tenant context
+        $tenant->run(function () use ($user) {
+            \App\Models\User::create([
+                'name' => $user->name,
+                'email' => $user->email,
+                'password' => $user->password,
+                'email_verified_at' => $user->email_verified_at,
+            ]);
+        });
     }
 
     /**

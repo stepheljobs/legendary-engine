@@ -45,4 +45,12 @@ class User extends Authenticatable
             'password' => 'hashed',
         ];
     }
+
+    /**
+     * Get the tenant owned by the user.
+     */
+    public function tenant()
+    {
+        return $this->hasOne(\Stancl\Tenancy\Database\Models\Tenant::class, 'user_id');
+    }
 }
