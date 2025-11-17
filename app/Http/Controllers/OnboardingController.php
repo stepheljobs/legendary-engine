@@ -71,7 +71,7 @@ class OnboardingController extends Controller
     }
 
     /**
-     * Create user in tenant database
+     * Create user in tenant database and set up initial roles/permissions
      */
     protected function createTenantUser($tenant)
     {
@@ -79,12 +79,31 @@ class OnboardingController extends Controller
 
         // Run this in the tenant context
         $tenant->run(function () use ($user) {
-            \App\Models\User::create([
+            // Seed roles and permissions
+            \Artisan::call('db:seed', [
+                '--class' => 'Database\\Seeders\\RolePermissionSeeder',
+                '--force' => true,
+            ]);
+
+            // Create user in tenant database
+            $tenantUser = \App\Models\User::create([
                 'name' => $user->name,
                 'email' => $user->email,
                 'password' => $user->password,
                 'email_verified_at' => $user->email_verified_at,
             ]);
+
+            // Get the owner role
+            $ownerRole = \App\Models\Role::where('name', 'owner')->first();
+
+            // Create team member record with owner role
+            if ($ownerRole) {
+                \App\Models\TeamMember::create([
+                    'user_id' => $tenantUser->id,
+                    'role_id' => $ownerRole->id,
+                    'joined_at' => now(),
+                ]);
+            }
         });
     }
 
