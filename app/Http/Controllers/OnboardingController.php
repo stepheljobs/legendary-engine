@@ -81,9 +81,8 @@ class OnboardingController extends Controller
         // Use tenant->run() to execute code in tenant context
         // This automatically handles tenancy initialization and cleanup
         $tenant->run(function () use ($centralUser) {
-            // Ensure migrations are run (JobPipeline should have done this, but run again to be safe)
+            // Ensure migrations are run (don't specify --database, already in tenant context)
             \Artisan::call('migrate', [
-                '--database' => 'tenant',
                 '--path' => 'database/migrations/tenant',
                 '--force' => true,
             ]);
