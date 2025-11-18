@@ -60,21 +60,8 @@ class OnboardingController extends Controller
             'domain' => $domain,
         ]);
 
-        // Debug: Check if tenant database was created by JobPipeline
-        \Log::info('Tenant created, waiting for JobPipeline to complete database setup', [
-            'tenant_id' => $tenant->id,
-        ]);
-
-        // Explicitly run tenant migrations using the tenants:migrate command
-        // This ensures database exists and migrations are complete
-        \Artisan::call('tenants:migrate', [
-            '--tenants' => [$tenant->id],
-        ]);
-
-        \Log::info('Tenant migrations completed');
-
         // Create the user in the tenant database
-        // The tenant->run() method automatically initializes and ends tenancy
+        // JobPipeline automatically creates DB and runs migrations
         $this->createTenantUser($tenant);
 
         return redirect()
