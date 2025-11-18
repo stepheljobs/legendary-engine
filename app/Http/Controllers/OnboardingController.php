@@ -61,6 +61,7 @@ class OnboardingController extends Controller
         ]);
 
         // Create the user in the tenant database
+        // JobPipeline automatically creates DB and runs migrations
         $this->createTenantUser($tenant);
 
         return redirect()
@@ -75,22 +76,22 @@ class OnboardingController extends Controller
      */
     protected function createTenantUser($tenant)
     {
-        $user = auth()->user();
+        $centralUser = auth()->user();
 
-        // Run this in the tenant context
-        $tenant->run(function () use ($user) {
+        // Use tenant->run() to execute code in tenant context
+        // This automatically handles tenancy initialization and cleanup
+        $tenant->run(function () use ($centralUser) {
             // Seed roles and permissions
-            \Artisan::call('db:seed', [
-                '--class' => 'Database\\Seeders\\RolePermissionSeeder',
-                '--force' => true,
-            ]);
+            // (Migrations already run by TenancyServiceProvider JobPipeline)
+            $seeder = new \Database\Seeders\RolePermissionSeeder();
+            $seeder->run();
 
             // Create user in tenant database
             $tenantUser = \App\Models\User::create([
-                'name' => $user->name,
-                'email' => $user->email,
-                'password' => $user->password,
-                'email_verified_at' => $user->email_verified_at,
+                'name' => $centralUser->name,
+                'email' => $centralUser->email,
+                'password' => $centralUser->password,
+                'email_verified_at' => $centralUser->email_verified_at,
             ]);
 
             // Get the owner role
